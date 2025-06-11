@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BotDetector – Análisis de Perfiles Sociales</title>
+
+  <!-- Font Awesome + Chart.js -->
+  <link  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+<div class="container">
+  <!-- ---------- CABECERA ---------- -->
+  <header>
+    <h1><i class="fas fa-robot"></i> BotDetector</h1>
+    <p>Analiza perfiles sociales para determinar si son bots o humanos mediante IA</p>
+  </header>
+
+  <div class="app-container">
+
+    <!-- ---------- FORMULARIO ---------- -->
+    <section class="form-section">
+      <h2 class="section-title"><i class="fas fa-edit"></i> Datos del Perfil</h2>
+
+      <form id="profile-form">
+        <div class="form-grid">
+
+          <!-- 1 avg_keywords -->
+          <div class="form-group">
+            <label for="avg_keywords"><i class="fas fa-key"></i> Promedio de palabras clave</label>
+            <input type="number" id="avg_keywords" name="avg_keywords" min="0" step="0.1" value="4.2">
+          </div>
+
+          <!-- 2 can_send_message -->
+          <div class="form-group">
+            <label for="can_send_message"><i class="fas fa-envelope"></i> Puede enviar mensajes</label>
+            <select id="can_send_message" name="can_send_message">
+              <option value="1">Sí</option><option value="0" selected>No</option>
+            </select>
+          </div>
+
+          <!-- 3 is_verified -->
+          <div class="form-group">
+            <label for="is_verified"><i class="fas fa-check-circle"></i> Cuenta verificada</label>
+            <select id="is_verified" name="is_verified">
+              <option value="1">Sí</option><option value="0" selected>No</option>
+            </select>
+          </div>
+
+          <!-- 4 subscribers_count -->
+          <div class="form-group">
+            <label for="subscribers_count"><i class="fas fa-users"></i> Nº de suscriptores</label>
+            <input type="number" id="subscribers_count" name="subscribers_count" min="0" value="2500">
+          </div>
+
+          <!-- 5 can_post_on_wall -->
+          <div class="form-group">
+            <label for="can_post_on_wall"><i class="fas fa-thumbtack"></i> Puede publicar en muro</label>
+            <select id="can_post_on_wall" name="can_post_on_wall">
+              <option value="1">Sí</option><option value="0" selected>No</option>
+            </select>
+          </div>
+
+          <!-- 6 can_invite_to_group -->
+          <div class="form-group">
+            <label for="can_invite_to_group"><i class="fas fa-user-plus"></i> Puede invitar a grupos</label>
+            <select id="can_invite_to_group" name="can_invite_to_group">
+              <option value="1">Sí</option><option value="0" selected>No</option>
+            </select>
+          </div>
+
+          <!-- 7 posting_frequency_days -->
+          <div class="form-group">
+            <label for="posting_frequency_days"><i class="fas fa-calendar-alt"></i> Frecuencia de posteo (días)</label>
+            <input type="number" id="posting_frequency_days" name="posting_frequency_days" min="0" step="0.1" value="3">
+          </div>
+
+          <!-- 8 avg_comments -->
+          <div class="form-group">
+            <label for="avg_comments"><i class="fas fa-comments"></i> Comentarios promedio</label>
+            <input type="number" id="avg_comments" name="avg_comments" min="0" step="0.1" value="12.6">
+          </div>
+
+          <!-- 9 has_mobile -->
+          <div class="form-group">
+            <label for="has_mobile"><i class="fas fa-mobile-alt"></i> Tiene móvil vinculado</label>
+            <select id="has_mobile" name="has_mobile">
+              <option value="1">Sí</option><option value="0" selected>No</option>
+            </select>
+          </div>
+
+          <!-- 10 reposts_ratio -->
+          <div class="form-group">
+            <label for="reposts_ratio"><i class="fas fa-retweet"></i> Ratio de reposts</label>
+            <input type="number" id="reposts_ratio" name="reposts_ratio" min="0" max="1" step="0.01" value="0.35">
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn-submit"><i class="fas fa-search"></i> Analizar Perfil</button>
+      </form>
+    </section>
+
+    <!-- ---------- RESULTADOS ---------- -->
+    <section class="result-section">
+      <h2 class="section-title"><i class="fas fa-chart-bar"></i> Resultados del Análisis</h2>
+      <div class="result-container">
+
+        <div class="prediction-card human" id="prediction-card">
+          <div class="result-label human" id="result-label"><i class="fas fa-user"></i> PERFIL HUMANO</div>
+          <p id="result-text">Espera el análisis...</p>
+          <div class="probability-bars">
+            <div id="bar-human" class="human-prob" style="width:0%">0%</div>
+            <div id="bar-bot"   class="bot-prob"   style="width:0%">0%</div>
+          </div>
+        </div>
+
+        <div class="chart-container"><canvas id="probability-chart"></canvas></div>
+
+        <div class="profile-details">
+          <h3><i class="fas fa-user-circle"></i> Perfil Analizado</h3>
+          <div class="attributes-grid" id="profile-details-grid"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="footer">BotDetector &copy; 2025</footer>
+</div>
+
+<!-- ---------- SCRIPTS ---------- -->
+<script>
+/* === colores desde :root === */
+const css  = getComputedStyle(document.documentElement);
+const C_HU = css.getPropertyValue('--human').trim();
+const C_BO = css.getPropertyValue('--bot').trim();
+
+/* === inicializar gráfico === */
+const ctx   = document.getElementById('probability-chart').getContext('2d');
+const chart = new Chart(ctx,{
+  type:'doughnut',
+  data:{ labels:['Humano','Bot'],
+         datasets:[{ data:[0,0], backgroundColor:[C_HU,C_BO], borderWidth:0 }]},
+  options:{ responsive:true, maintainAspectRatio:false, cutout:'60%',
+    plugins:{ legend:{ position:'bottom',
+      labels:{ font:{size:14}, padding:20 }}}}
+});
+
+/* === orden de variables que envía el frontend === */
+const FEATURE_ORDER = Object.freeze([
+  'avg_keywords','can_send_message','is_verified','subscribers_count',
+  'can_post_on_wall','can_invite_to_group','posting_frequency_days',
+  'avg_comments','has_mobile','reposts_ratio',
+]);
+
+/* === submit === */
+document.getElementById('profile-form').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const data = new FormData(e.target);
+
+  try{
+    const res = await fetch('/predict',{method:'POST',body:data});
+    const txt = await res.text();
+    if(!res.ok) throw new Error(txt);
+    const json = JSON.parse(txt);
+    if(json.error) throw new Error(json.error);
+
+    const humanP = json.human_prob, botP = json.bot_prob;
+    /* tarjeta resultado */
+    const isHuman = humanP >= botP;
+    document.getElementById('result-label').textContent = isHuman?'PERFIL HUMANO':'PERFIL BOT';
+    const card = document.getElementById('prediction-card');
+    card.classList.toggle('human',isHuman);
+    card.classList.toggle('bot',!isHuman);
+
+    /* barras */
+    document.getElementById('bar-human').style.width = humanP+'%';
+    document.getElementById('bar-human').textContent = humanP.toFixed(1)+'% Humano';
+    document.getElementById('bar-bot').style.width   = botP+'%';
+    document.getElementById('bar-bot').textContent   = botP.toFixed(1)+'% Bot';
+
+    /* doughnut */
+    chart.data.datasets[0].data = [humanP,botP]; chart.update();
+
+    /* grid atributos */
+    const grid = document.getElementById('profile-details-grid');
+    grid.innerHTML='';
+    FEATURE_ORDER.forEach(k=>{
+      const v = data.get(k);
+      grid.insertAdjacentHTML('beforeend',`
+        <div class="attribute-card">
+          <div class="value">${v}</div>
+          <div class="label">${k.replace(/_/g,' ')}</div>
+        </div>`);
+    });
+
+  }catch(err){ alert('Error: '+err.message); console.error(err); }
+});
+</script>
+</body>
+</html>
