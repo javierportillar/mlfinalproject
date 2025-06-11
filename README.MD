@@ -1,7 +1,7 @@
 # BotDetector – Proyecto Final de *Machine Learning*
 
 Aplicación web desarrollada con **Flask** que clasifica perfiles de redes sociales como **bot** o **humano**.  
-Carga un modelo previamente entrenado (`model_admit.pkl`) y expone una interfaz gráfica amigable y una API REST para predicciones en tiempo real.
+Carga un modelo previamente entrenado (`model_admit.pkl`) este modelo se encuentra en el siguiente link [Link Colab](https://colab.research.google.com/drive/1ut2pMnxQV1ILBj91ydiIBFoLJ3avo5Rm) y expone una interfaz gráfica amigable y una API REST para predicciones en tiempo real.
 ---
 
 ## 🧩  Características principales
